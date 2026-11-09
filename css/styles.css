@@ -30,7 +30,7 @@ body {
   min-height: 100dvh;
 }
 
-/* El ladrillo queda quieto detrás de todo, así no salta ni cambia de luz */
+/* El fondo queda quieto detrás de todo, así no salta ni cambia de luz */
 body::before {
   content: "";
   position: fixed;
@@ -39,10 +39,7 @@ body::before {
   right: 0;
   height: 100lvh;
   z-index: -1;
-  background-image:
-    linear-gradient(rgba(14, 7, 30, .55), rgba(14, 7, 30, .55)),
-    url("https://static.wixstatic.com/media/8594ca_26e00f0545f54be3b7a6dcd5494bedde~mv2.jpg");
-  background-size: auto, 720px auto;
+  background-image: linear-gradient(160deg, #4a1d8f 0%, #22104a 50%, #050208 100%);
 }
 
 html.bloqueado { overflow: hidden; }
