@@ -10,6 +10,7 @@
   const SALIDA_MS = 240;
   const ENTRADA_MS = 380;
   const FOTO_MS = 200;
+  const REGRESO_MS = 460;
   const CURVA = "cubic-bezier(.7, 0, .2, 1)";
 
   const $ = (id) => document.getElementById(id);
@@ -390,18 +391,22 @@
     $("cart-close").focus({ preventScroll: true });
   }
 
-  // La factura sale deslizándose y deja ver lo que había detrás.
+  // La factura sale por la derecha mientras lo que había antes entra por la izquierda.
   async function cerrarCarrito() {
     carritoAbierto = false;
     ocupado = true;
     raiz.classList.remove("en-carrito");
-    const salida = cart.animate(
-      [{ transform: "translateX(0)", opacity: 1 }, { transform: "translateX(100%)", opacity: 0 }],
-      { duration: SALIDA_MS + 60, easing: "cubic-bezier(.5, 0, .9, .5)", fill: "forwards" }
-    );
-    await Promise.race([salida.finished.catch(() => {}), esperar(SALIDA_MS + 160)]);
+    const opciones = { duration: REGRESO_MS, easing: "cubic-bezier(.6, 0, .2, 1)", fill: "both" };
+    const anteriores = abierto ? [detail] : [cabecera, grid];
+    const movimientos = [
+      cart.animate([{ transform: "translateX(0)" }, { transform: "translateX(100vw)" }], opciones),
+      ...anteriores.map((e) =>
+        e.animate([{ transform: "translateX(-100vw)" }, { transform: "translateX(0)" }], opciones)
+      ),
+    ];
+    await Promise.race([movimientos[0].finished.catch(() => {}), esperar(REGRESO_MS + 100)]);
     cart.hidden = true;
-    salida.cancel();
+    movimientos.forEach((m) => m.cancel());
     if (!abierto) raiz.classList.remove("bloqueado");
     bag.focus({ preventScroll: true });
     ocupado = false;
