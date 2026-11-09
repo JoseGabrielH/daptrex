@@ -9,6 +9,7 @@
   --purple: #a855f7;
   --white: #fff;
   --dim: rgba(255, 255, 255, .5);
+  --soft: #c9a4ff;
   --font: "Digital", "Courier New", monospace;
 }
 
@@ -46,6 +47,7 @@ body::before {
 
 html.bloqueado { overflow: hidden; }
 html.en-detalle .top, html.en-detalle .grid { visibility: hidden; }
+html.en-carrito .top, html.en-carrito .grid, html.en-carrito .detail { visibility: hidden; }
 
 img { display: block; max-width: 100%; }
 button { -webkit-tap-highlight-color: transparent; }
@@ -60,7 +62,7 @@ button { -webkit-tap-highlight-color: transparent; }
 }
 
 /* Filtros */
-.top { padding: 24px 16px 40px; }
+.top { padding: 24px 64px 40px; }
 .filters {
   display: flex;
   flex-wrap: wrap;
@@ -139,7 +141,7 @@ button { -webkit-tap-highlight-color: transparent; }
   letter-spacing: .08em;
   text-transform: uppercase;
 }
-.card:focus-visible, .chip:focus-visible, .arrow:focus-visible, .detail__close:focus-visible {
+.card:focus-visible, .chip:focus-visible, .arrow:focus-visible, .detail__close:focus-visible, .bag:focus-visible, .buy:focus-visible, .add:focus-visible, .cantidad button:focus-visible {
   outline: 2px solid var(--purple);
   outline-offset: 3px;
 }
@@ -151,15 +153,17 @@ button { -webkit-tap-highlight-color: transparent; }
   z-index: 10;
   display: flex;
   flex-direction: column;
-  justify-content: center;
+  justify-content: safe center;
   align-items: center;
-  padding: 0 16px;
+  padding: 16px;
+  overflow-y: auto;
+  scrollbar-width: none;
   text-align: center;
 }
 .detail__close {
   position: absolute;
   top: 12px;
-  right: 12px;
+  left: 12px;
   width: 44px;
   height: 44px;
   color: var(--white);
@@ -175,7 +179,7 @@ button { -webkit-tap-highlight-color: transparent; }
   width: min(920px, 100%);
   margin: 0 auto;
 }
-.detail__frame { width: min(560px, calc(100% - 72px), 62dvh); aspect-ratio: 1; touch-action: pan-y; }
+.detail__frame { flex: none; width: min(560px, calc(100% - 72px), max(220px, calc(100dvh - 340px))); aspect-ratio: 1; touch-action: pan-y; }
 .detail__frame img { width: 100%; height: 100%; object-fit: contain; }
 .arrow {
   flex: none;
@@ -191,8 +195,97 @@ button { -webkit-tap-highlight-color: transparent; }
   transition: color .15s;
 }
 .arrow:hover { color: var(--purple); }
-.dots { display: flex; justify-content: center; margin-top: 20px; }
+.dots { display: flex; justify-content: center; margin-top: 12px; }
 .dots button { padding: 8px 5px; background: none; border: 0; cursor: pointer; }
 .dots span { display: block; width: 6px; height: 6px; background: var(--dim); border-radius: 50%; }
 .dots button[aria-current="true"] span { background: var(--white); box-shadow: 0 0 8px var(--purple); }
 .detail__type { margin: 8px 0 0; font-size: 1.4rem; letter-spacing: .08em; text-transform: uppercase; }
+.detail__price { margin: 8px 0 0; font-size: 1.6rem; letter-spacing: .06em; }
+.detail__desc { max-width: 480px; margin: 8px 0 0; color: var(--soft); font-size: 1.05rem; line-height: 1.4; letter-spacing: .03em; }
+.detail__actions { display: flex; gap: 10px; width: min(360px, 100%); margin-top: 16px; flex: none; }
+.detail__actions .buy { flex: 1; }
+
+.buy {
+  display: block;
+  padding: 12px 16px;
+  color: #12082a;
+  font-size: 1.2rem;
+  letter-spacing: .1em;
+  text-align: center;
+  text-decoration: none;
+  text-transform: uppercase;
+  background: var(--white);
+  transition: background .15s;
+}
+.buy:hover { background: var(--soft); }
+.add {
+  flex: none;
+  width: 50px;
+  color: var(--white);
+  font: 400 1.9rem/1 "Courier New", monospace;
+  background: none;
+  border: 1px solid var(--white);
+  cursor: pointer;
+  transition: color .15s, background .15s;
+}
+.add:hover { color: #12082a; background: var(--white); }
+
+/* Bolsa */
+.bag {
+  position: fixed;
+  top: 18px;
+  right: 16px;
+  z-index: 20;
+  display: grid;
+  place-items: center;
+  width: 44px;
+  height: 44px;
+  padding: 0;
+  color: var(--white);
+  background: rgba(14, 7, 30, .6);
+  border: 0;
+  border-radius: 50%;
+  cursor: pointer;
+}
+.bag__count {
+  position: absolute;
+  top: -2px;
+  right: -2px;
+  min-width: 20px;
+  height: 20px;
+  padding: 0 4px;
+  color: #12082a;
+  font-size: .95rem;
+  line-height: 20px;
+  background: var(--white);
+  border-radius: 10px;
+}
+
+/* Factura */
+.cart {
+  position: fixed;
+  inset: 0;
+  z-index: 15;
+  overflow-y: auto;
+  scrollbar-width: none;
+}
+.cart__box { width: min(640px, 100%); margin: 0 auto; padding: 76px 16px 40px; letter-spacing: .06em; text-transform: uppercase; font-size: 1.2rem; }
+.cart__title { margin: 0 0 24px; font-size: 1.4rem; font-weight: 400; letter-spacing: .08em; }
+.cart__empty { margin: 48px 0; text-align: center; color: var(--soft); }
+.linea { display: grid; grid-template-columns: 76px 1fr; gap: 16px; align-items: center; margin-bottom: 24px; }
+.linea img { width: 76px; height: 76px; object-fit: contain; }
+.linea__fila { display: flex; justify-content: space-between; align-items: center; min-height: 34px; }
+.cantidad { display: flex; align-items: center; gap: 4px; }
+.cantidad button {
+  width: 32px;
+  height: 32px;
+  padding: 0;
+  color: var(--white);
+  font: 400 1.3rem/1 "Courier New", monospace;
+  background: none;
+  border: 0;
+  cursor: pointer;
+}
+.cantidad span { min-width: 22px; text-align: center; }
+.cart__total { display: flex; justify-content: space-between; margin: 8px 0 24px; padding-top: 16px; border-top: 1px solid var(--dim); font-size: 1.4rem; }
+

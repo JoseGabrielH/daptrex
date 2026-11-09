@@ -10,6 +10,10 @@
 </head>
 <body>
   <h1 class="sr-only">Daptrex</h1>
+  <button class="bag" id="bag" type="button" aria-label="Ver bolsa de compra">
+    <svg viewBox="0 0 24 24" width="26" height="26" aria-hidden="true"><path d="M5 8h14l1 13H4L5 8Z" fill="none" stroke="currentColor" stroke-width="1.8"/><path d="M9 10V6a3 3 0 0 1 6 0v4" fill="none" stroke="currentColor" stroke-width="1.8"/></svg>
+    <span class="bag__count" id="bag-count" hidden></span>
+  </button>
   <header class="top">
     <nav class="filters" aria-label="Filtrar prendas" id="filters"></nav>
   </header>
@@ -30,6 +34,25 @@
       </div>
       <div class="dots" id="detail-dots"></div>
       <p class="detail__type" id="detail-type"></p>
+      <p class="detail__price" id="detail-price"></p>
+      <p class="detail__desc" id="detail-desc"></p>
+      <div class="detail__actions" id="detail-actions">
+        <a class="buy" id="detail-buy" target="_blank" rel="noopener">Comprar</a>
+        <button class="add" id="detail-add" type="button" aria-label="Agregar a la bolsa">+</button>
+      </div>
+    </section>
+
+    <section class="cart" id="cart" aria-label="Resumen de compra" hidden>
+      <button class="detail__close" id="cart-close" type="button" aria-label="Cerrar la bolsa">&times;</button>
+      <div class="cart__box">
+        <h2 class="cart__title">Resumen de compra</h2>
+        <p class="cart__empty" id="cart-empty">Tu bolsa está vacía</p>
+        <div id="cart-items"></div>
+        <div id="cart-footer">
+          <p class="cart__total"><span>Total</span><span id="cart-total"></span></p>
+          <a class="buy" id="cart-buy" target="_blank" rel="noopener">Comprar</a>
+        </div>
+      </div>
     </section>
   </main>
 

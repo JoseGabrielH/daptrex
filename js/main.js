@@ -21,13 +21,22 @@
   const frame = $("detail-frame");
   const detailImg = $("detail-img");
   const dots = $("detail-dots");
+  const bag = $("bag");
+  const bagCount = $("bag-count");
+  const cart = $("cart");
 
   const esRecorte = (foto) => /\.(png|webp)$/i.test(foto);
   const esperar = (ms) => new Promise((ok) => setTimeout(ok, ms));
+  const pesos = (n) => "$" + n.toLocaleString("es-CO");
+  const waLink = (texto) => `https://wa.me/${WHATSAPP}?text=${encodeURIComponent(texto)}`;
+  const urlFoto = (p) => new URL(RUTA + p.fotos[0], location.href).href;
+  const etiqueta = (p) => `${p.tipo} ${p.nombre}`;
 
   let tipoActual = null;
   let ocupado = false;
   let turnoFoto = 0;
+  let carritoAbierto = false;
+  let bolsa = cargarBolsa();
   let abierto = null; // { producto, foto, card, scroll, transform }
 
   /* ---------- Catálogo ---------- */
@@ -153,6 +162,11 @@
     $("detail-next").style.visibility = varias ? "" : "hidden";
     detailImg.alt = `${p.tipo} ${p.nombre}`;
     $("detail-type").textContent = p.tipo;
+    $("detail-price").textContent = pesos(p.precio);
+    $("detail-desc").textContent = DESCRIPCION;
+    $("detail-buy").href = waLink(
+      `Hola, quiero comprar esta prenda:\n\n${etiqueta(p)}\nPrecio: ${pesos(p.precio)}\nFoto: ${urlFoto(p)}`
+    );
     verFoto(0);
   }
 
@@ -180,7 +194,7 @@
   }
 
   function mostrarControles() {
-    const controles = [$("detail-close"), $("detail-prev"), $("detail-next"), dots, $("detail-type")];
+    const controles = [$("detail-close"), $("detail-prev"), $("detail-next"), dots, $("detail-type"), $("detail-price"), $("detail-desc"), $("detail-actions")];
     controles.forEach((e) => e.animate([{ opacity: 0 }, { opacity: 1 }], { duration: 260, easing: "ease-out" }));
   }
 
@@ -239,9 +253,16 @@
   $("detail-close").addEventListener("click", () => { if (!ocupado) history.back(); });
   $("detail-prev").addEventListener("click", () => verFoto(abierto.foto - 1, -1));
   $("detail-next").addEventListener("click", () => verFoto(abierto.foto + 1, 1));
-  window.addEventListener("popstate", cerrar);
+  window.addEventListener("popstate", () => {
+    if (carritoAbierto) cerrarCarrito();
+    else cerrar();
+  });
 
   document.addEventListener("keydown", (e) => {
+    if (carritoAbierto) {
+      if (e.key === "Escape") history.back();
+      return;
+    }
     if (!abierto || ocupado) return;
     if (e.key === "Escape") history.back();
     if (abierto.producto.fotos.length < 2) return;
@@ -259,7 +280,145 @@
     if (Math.abs(d) > 40) verFoto(abierto.foto + (d < 0 ? 1 : -1), d < 0 ? 1 : -1);
   }, { passive: true });
 
+  /* ---------- Bolsa de compra ---------- */
+
+  // bolsa = { "nombre de la prenda": cantidad }
+  function cargarBolsa() {
+    try {
+      const guardada = JSON.parse(localStorage.getItem("daptrex-bolsa")) || {};
+      return Object.fromEntries(
+        Object.entries(guardada).filter(([nombre, n]) => PRODUCTOS.some((p) => p.nombre === nombre) && n > 0)
+      );
+    } catch {
+      return {};
+    }
+  }
+
+  function guardarBolsa() {
+    try {
+      localStorage.setItem("daptrex-bolsa", JSON.stringify(bolsa));
+    } catch {
+      // Sin almacenamiento, la bolsa dura mientras la página esté abierta.
+    }
+  }
+
+  function lineasBolsa() {
+    return PRODUCTOS.filter((p) => bolsa[p.nombre]).map((p) => ({ p, cantidad: bolsa[p.nombre] }));
+  }
+
+  function actualizarContador() {
+    const total = Object.values(bolsa).reduce((suma, n) => suma + n, 0);
+    bagCount.hidden = total === 0;
+    bagCount.textContent = total;
+    bag.setAttribute("aria-label", `Ver bolsa de compra, ${total} ${total === 1 ? "prenda" : "prendas"}`);
+  }
+
+  function cambiarCantidad(nombre, delta) {
+    const nueva = (bolsa[nombre] || 0) + delta;
+    if (nueva > 0) bolsa[nombre] = nueva;
+    else delete bolsa[nombre];
+    guardarBolsa();
+    actualizarContador();
+    if (carritoAbierto) pintarCarrito();
+  }
+
+  function crearLinea({ p, cantidad }) {
+    const linea = document.createElement("div");
+    linea.className = "linea";
+
+    const img = document.createElement("img");
+    img.src = RUTA + p.fotos[0];
+    img.alt = etiqueta(p);
+
+    const datos = document.createElement("div");
+    const fila1 = document.createElement("div");
+    fila1.className = "linea__fila";
+    const nombre = document.createElement("span");
+    nombre.textContent = p.tipo;
+    const precio = document.createElement("span");
+    precio.textContent = pesos(p.precio * cantidad);
+    fila1.append(nombre, precio);
+
+    const fila2 = document.createElement("div");
+    fila2.className = "linea__fila";
+    const rotulo = document.createElement("span");
+    rotulo.textContent = "Cantidad";
+    const control = document.createElement("div");
+    control.className = "cantidad";
+    const crearBoton = (texto, aria, delta) => {
+      const b = document.createElement("button");
+      b.type = "button";
+      b.textContent = texto;
+      b.setAttribute("aria-label", aria);
+      b.addEventListener("click", () => cambiarCantidad(p.nombre, delta));
+      return b;
+    };
+    const numero = document.createElement("span");
+    numero.textContent = cantidad;
+    control.append(crearBoton("+", "Agregar una", 1), numero, crearBoton("−", "Quitar una", -1));
+    fila2.append(rotulo, control);
+
+    datos.append(fila1, fila2);
+    linea.append(img, datos);
+    return linea;
+  }
+
+  function pintarCarrito() {
+    const lineas = lineasBolsa();
+    const total = lineas.reduce((suma, { p, cantidad }) => suma + p.precio * cantidad, 0);
+    $("cart-items").replaceChildren(...lineas.map(crearLinea));
+    $("cart-empty").hidden = lineas.length > 0;
+    $("cart-footer").hidden = lineas.length === 0;
+    $("cart-total").textContent = pesos(total);
+    const detalle = lineas.map(({ p, cantidad }) =>
+      `${cantidad} x ${etiqueta(p)} - ${pesos(p.precio * cantidad)}\nFoto: ${urlFoto(p)}`
+    ).join("\n\n");
+    $("cart-buy").href = waLink(`Hola, quiero comprar:\n\n${detalle}\n\nTotal: ${pesos(total)}`);
+  }
+
+  function abrirCarrito() {
+    if (ocupado) return;
+    carritoAbierto = true;
+    pintarCarrito();
+    cart.hidden = false;
+    raiz.classList.add("en-carrito", "bloqueado");
+    history.pushState({ carrito: true }, "");
+    cart.animate(
+      [{ transform: "translateX(8%)", opacity: 0 }, { transform: "translateX(0)", opacity: 1 }],
+      { duration: 280, easing: "cubic-bezier(.15, .7, .25, 1)" }
+    );
+    $("cart-close").focus({ preventScroll: true });
+  }
+
+  function cerrarCarrito() {
+    carritoAbierto = false;
+    cart.hidden = true;
+    raiz.classList.remove("en-carrito");
+    if (!abierto) raiz.classList.remove("bloqueado");
+    bag.focus({ preventScroll: true });
+  }
+
+  function agregarAlCarrito() {
+    if (!abierto) return;
+    cambiarCantidad(abierto.producto.nombre, 1);
+    const boton = $("detail-add");
+    boton.textContent = "✓";
+    setTimeout(() => { boton.textContent = "+"; }, 900);
+    bag.animate(
+      [{ transform: "scale(1)" }, { transform: "scale(1.25)" }, { transform: "scale(1)" }],
+      { duration: 320, easing: "ease-out" }
+    );
+  }
+
+  bag.addEventListener("click", () => {
+    if (carritoAbierto) history.back();
+    else abrirCarrito();
+  });
+  $("cart-close").addEventListener("click", () => history.back());
+  $("detail-add").addEventListener("click", agregarAlCarrito);
+
   crearFiltros();
   marcarFiltro();
+  actualizarContador();
   pintar();
 })();
