@@ -390,12 +390,21 @@
     $("cart-close").focus({ preventScroll: true });
   }
 
-  function cerrarCarrito() {
+  // La factura sale deslizándose y deja ver lo que había detrás.
+  async function cerrarCarrito() {
     carritoAbierto = false;
-    cart.hidden = true;
+    ocupado = true;
     raiz.classList.remove("en-carrito");
+    const salida = cart.animate(
+      [{ transform: "translateX(0)", opacity: 1 }, { transform: "translateX(100%)", opacity: 0 }],
+      { duration: SALIDA_MS + 60, easing: "cubic-bezier(.5, 0, .9, .5)", fill: "forwards" }
+    );
+    await Promise.race([salida.finished.catch(() => {}), esperar(SALIDA_MS + 160)]);
+    cart.hidden = true;
+    salida.cancel();
     if (!abierto) raiz.classList.remove("bloqueado");
     bag.focus({ preventScroll: true });
+    ocupado = false;
   }
 
   function agregarAlCarrito() {
