@@ -112,27 +112,6 @@ button { -webkit-tap-highlight-color: transparent; }
   outline-offset: 3px;
 }
 
-/* Cambio de categoría: las prendas se encienden como una pantalla digital */
-.card--in {
-  animation: encender 520ms steps(9, end) backwards;
-  animation-delay: calc(var(--i) * 45ms);
-}
-.grid.is-out .card { animation: apagar 170ms steps(4, end) forwards; }
-
-@keyframes encender {
-  0%   { opacity: 0; clip-path: inset(0 0 100% 0); filter: brightness(2.4) saturate(0) drop-shadow(0 0 14px var(--purple)); transform: translateX(-5px); }
-  30%  { opacity: 1; clip-path: inset(0 0 58% 0); filter: brightness(2) saturate(.3) drop-shadow(0 0 14px var(--purple)); transform: translateX(4px); }
-  45%  { opacity: .25; clip-path: inset(0 0 40% 0); }
-  60%  { opacity: 1; clip-path: inset(0 0 12% 0); filter: brightness(1.5) drop-shadow(0 0 10px var(--purple)); transform: translateX(-2px); }
-  75%  { opacity: .55; clip-path: inset(0); }
-  100% { opacity: 1; clip-path: inset(0); filter: none; transform: none; }
-}
-@keyframes apagar {
-  0%   { opacity: 1; filter: brightness(1.8) drop-shadow(0 0 10px var(--purple)); }
-  50%  { opacity: .3; clip-path: inset(30% 0 30% 0); }
-  100% { opacity: 0; clip-path: inset(50% 0 50% 0); }
-}
-
 /* Vista de la prenda */
 .detail { padding-top: 34px; text-align: center; }
 .detail__close {

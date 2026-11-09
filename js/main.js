@@ -7,6 +7,8 @@
     { etiqueta: "Camisas", tipo: "Camisa" },
   ];
   const ZOOM_MS = 620;
+  const SALIDA_MS = 240;
+  const ENTRADA_MS = 380;
   const CURVA = "cubic-bezier(.7, 0, .2, 1)";
 
   const $ = (id) => document.getElementById(id);
@@ -21,7 +23,6 @@
   const esperar = (ms) => new Promise((ok) => setTimeout(ok, ms));
 
   let tipoActual = null;
-  let turnoFiltro = 0;
   let ocupado = false;
   let abierto = null; // { producto, foto, card, scroll, transform }
 
@@ -30,8 +31,7 @@
   function crearTarjeta(p, indice) {
     const card = document.createElement("button");
     card.type = "button";
-    card.className = "card card--in";
-    card.style.setProperty("--i", Math.min(indice, 14));
+    card.className = "card";
     card.setAttribute("aria-label", `Ver fotos: ${p.tipo} ${p.nombre}`);
 
     const img = document.createElement("img");
@@ -68,17 +68,32 @@
       history.back();
     }
     if (tipo === tipoActual && !veniaDeDetalle) return;
+    const posicion = (t) => FILTROS.findIndex((f) => f.tipo === t);
+    const sentido = posicion(tipo) > posicion(tipoActual) ? 1 : -1;
     tipoActual = tipo;
     marcarFiltro();
-    const turno = ++turnoFiltro;
-    if (!veniaDeDetalle) {
-      grid.classList.add("is-out");
-      await esperar(170);
-      if (turno !== turnoFiltro) return;
+
+    if (veniaDeDetalle) {
+      pintar();
+      window.scrollTo(0, 0);
+      return;
     }
-    grid.classList.remove("is-out");
+
+    // Las prendas actuales salen hacia un lado y las nuevas entran por el otro.
+    ocupado = true;
+    const salida = grid.animate(
+      [{ transform: "translateX(0)", opacity: 1 }, { transform: `translateX(${-sentido * 100}%)`, opacity: 0 }],
+      { duration: SALIDA_MS, easing: "cubic-bezier(.5, 0, .9, .5)", fill: "forwards" }
+    );
+    await Promise.race([salida.finished.catch(() => {}), esperar(SALIDA_MS + 100)]);
     pintar();
     window.scrollTo(0, 0);
+    salida.cancel();
+    grid.animate(
+      [{ transform: `translateX(${sentido * 100}%)`, opacity: 0 }, { transform: "translateX(0)", opacity: 1 }],
+      { duration: ENTRADA_MS, easing: "cubic-bezier(.15, .7, .25, 1)" }
+    );
+    ocupado = false;
   }
 
   function crearFiltros() {
@@ -169,7 +184,7 @@
     prepararDetalle(p);
     history.pushState({ detalle: true }, "");
 
-    grid.querySelectorAll(".card--in").forEach((c) => c.classList.remove("card--in"));
+    grid.getAnimations().forEach((a) => a.cancel());
     abierto.transform = calcularZoom(card);
     const carga = detailImg.decode ? detailImg.decode().catch(() => {}) : Promise.resolve();
     const fundidos = desvanecerResto(card, 1, 0);
