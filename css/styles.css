@@ -24,11 +24,25 @@ body {
   color: var(--white);
   font-family: var(--font);
   background-color: var(--bg);
+}
+
+/* El ladrillo queda quieto detrás de todo, así no salta ni cambia de luz */
+body::before {
+  content: "";
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 100lvh;
+  z-index: -1;
   background-image:
     linear-gradient(rgba(14, 7, 30, .55), rgba(14, 7, 30, .55)),
     url("https://static.wixstatic.com/media/8594ca_26e00f0545f54be3b7a6dcd5494bedde~mv2.jpg");
   background-size: auto, 720px auto;
 }
+
+html.bloqueado { overflow: hidden; }
+html.en-detalle .top, html.en-detalle .page { visibility: hidden; }
 
 img { display: block; max-width: 100%; }
 button { -webkit-tap-highlight-color: transparent; }
@@ -68,7 +82,7 @@ button { -webkit-tap-highlight-color: transparent; }
 }
 
 /* Catálogo: la última fila queda centrada */
-.page { position: relative; max-width: 1800px; margin: 0 auto; padding: 0 16px 64px; overflow: clip; }
+.page { position: relative; max-width: 1800px; margin: 0 auto; padding: 0 16px 64px; overflow-x: clip; }
 .grid {
   --cols: 2;
   --gx: 14px;
@@ -97,9 +111,12 @@ button { -webkit-tap-highlight-color: transparent; }
   border: 0;
   cursor: zoom-in;
 }
-.card img { width: 100%; aspect-ratio: 1; object-fit: cover; transition: box-shadow .2s; }
+.card img { width: 100%; aspect-ratio: 1; object-fit: cover; transition: transform .25s ease; }
 .card img.is-cutout { object-fit: contain; }
-.card:hover img { box-shadow: 0 0 0 2px var(--purple), 0 0 22px rgba(168, 85, 247, .5); }
+@media (hover: hover) {
+  .card:hover img { transform: translateY(-8px); }
+}
+.card.levantada img { transform: translateY(-8px); }
 .card__type {
   display: block;
   margin-top: 12px;
@@ -113,10 +130,20 @@ button { -webkit-tap-highlight-color: transparent; }
 }
 
 /* Vista de la prenda */
-.detail { padding-top: 34px; text-align: center; }
+.detail {
+  position: fixed;
+  inset: 0;
+  z-index: 10;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  padding: 0 16px;
+  text-align: center;
+}
 .detail__close {
   position: absolute;
-  top: 0;
+  top: 12px;
   right: 12px;
   width: 44px;
   height: 44px;

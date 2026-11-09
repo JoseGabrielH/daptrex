@@ -12,6 +12,8 @@
   const CURVA = "cubic-bezier(.7, 0, .2, 1)";
 
   const $ = (id) => document.getElementById(id);
+  const raiz = document.documentElement;
+  const cabecera = document.querySelector(".top");
   const grid = $("grid");
   const filters = $("filters");
   const detail = $("detail");
@@ -61,23 +63,11 @@
   }
 
   async function cambiarFiltro(tipo) {
-    if (ocupado) return;
-    const veniaDeDetalle = Boolean(abierto);
-    if (abierto) {
-      cerrarSinAnimar();
-      history.back();
-    }
-    if (tipo === tipoActual && !veniaDeDetalle) return;
+    if (ocupado || abierto || tipo === tipoActual) return;
     const posicion = (t) => FILTROS.findIndex((f) => f.tipo === t);
     const sentido = posicion(tipo) > posicion(tipoActual) ? 1 : -1;
     tipoActual = tipo;
     marcarFiltro();
-
-    if (veniaDeDetalle) {
-      pintar();
-      window.scrollTo(0, 0);
-      return;
-    }
 
     // Las prendas actuales salen hacia un lado y las nuevas entran por el otro.
     ocupado = true;
@@ -146,45 +136,42 @@
 
   // Calcula el movimiento que lleva la foto tocada hasta donde estará la foto grande.
   function calcularZoom(card) {
-    detail.style.cssText = "visibility:hidden;position:absolute;top:0;left:0;right:0";
+    detail.style.visibility = "hidden";
     detail.hidden = false;
     const destino = frame.getBoundingClientRect();
-    const destinoTop = destino.top + window.scrollY;
     detail.hidden = true;
-    detail.style.cssText = "";
+    detail.style.visibility = "";
 
     const origen = card.querySelector("img").getBoundingClientRect();
     const caja = grid.getBoundingClientRect();
     const escala = destino.width / origen.width;
     const x = destino.left - (origen.left - caja.left) * escala - caja.left;
-    const y = destinoTop - (origen.top - caja.top) * escala - caja.top;
+    const y = destino.top - (origen.top - caja.top) * escala - caja.top;
     return `translate(${x}px, ${y}px) scale(${escala})`;
   }
 
   function desvanecerResto(card, desde, hasta) {
     const opciones = { duration: ZOOM_MS * 0.6, easing: "ease", fill: "both" };
-    const anims = [...grid.children]
-      .filter((c) => c !== card)
-      .map((c) => c.animate([{ opacity: desde }, { opacity: hasta }], opciones));
-    anims.push(card.querySelector(".card__type").animate([{ opacity: desde }, { opacity: hasta }], opciones));
-    return anims;
+    const elementos = [...grid.children].filter((c) => c !== card);
+    elementos.push(card.querySelector(".card__type"), cabecera);
+    return elementos.map((e) => e.animate([{ opacity: desde }, { opacity: hasta }], opciones));
   }
 
-  function mostrarDetalle() {
-    grid.hidden = true;
-    detail.hidden = false;
-    window.scrollTo(0, 0);
-    $("detail-close").focus({ preventScroll: true });
+  function mostrarControles() {
+    const controles = [$("detail-close"), $("detail-prev"), $("detail-next"), dots, $("detail-type")];
+    controles.forEach((e) => e.animate([{ opacity: 0 }, { opacity: 1 }], { duration: 260, easing: "ease-out" }));
   }
 
   async function abrir(p, card) {
     if (ocupado || abierto) return;
     ocupado = true;
-    abierto = { producto: p, foto: 0, card, scroll: window.scrollY, transform: "" };
+    grid.getAnimations().forEach((a) => a.cancel());
+    abierto = { producto: p, foto: 0, card, transform: "" };
     prepararDetalle(p);
     history.pushState({ detalle: true }, "");
 
-    grid.getAnimations().forEach((a) => a.cancel());
+    raiz.classList.add("bloqueado");
+    if (card.matches(":hover")) card.classList.add("levantada");
     abierto.transform = calcularZoom(card);
     const carga = detailImg.decode ? detailImg.decode().catch(() => {}) : Promise.resolve();
     const fundidos = desvanecerResto(card, 1, 0);
@@ -195,31 +182,24 @@
     await Promise.race([zoom.finished, esperar(ZOOM_MS + 200)]);
     await Promise.race([carga, esperar(250)]);
 
-    mostrarDetalle();
+    // La foto grande queda exactamente sobre la que hizo el zoom: no hay corte.
+    detail.hidden = false;
+    raiz.classList.add("en-detalle");
     zoom.cancel();
     fundidos.forEach((a) => a.cancel());
-    detail.animate([{ opacity: 0.35 }, { opacity: 1 }], { duration: 200, easing: "ease-out" });
+    mostrarControles();
+    $("detail-close").focus({ preventScroll: true });
     ocupado = false;
-  }
-
-  function cerrarSinAnimar() {
-    const { scroll, card } = abierto;
-    abierto = null;
-    detail.hidden = true;
-    grid.hidden = false;
-    window.scrollTo(0, scroll);
-    return card;
   }
 
   async function cerrar() {
     if (!abierto || ocupado) return;
-    const { transform } = abierto;
-    const card = cerrarSinAnimar();
-    if (!transform || !card.isConnected) {
-      card.focus({ preventScroll: true });
-      return;
-    }
+    const { transform, card } = abierto;
+    abierto = null;
     ocupado = true;
+    detail.hidden = true;
+    raiz.classList.remove("en-detalle");
+
     const fundidos = desvanecerResto(card, 0, 1);
     const zoom = grid.animate(
       [{ transform }, { transform: "none" }],
@@ -228,6 +208,8 @@
     await Promise.race([zoom.finished.catch(() => {}), esperar(ZOOM_MS + 200)]);
     zoom.cancel();
     fundidos.forEach((a) => a.cancel());
+    card.classList.remove("levantada");
+    raiz.classList.remove("bloqueado");
     card.focus({ preventScroll: true });
     ocupado = false;
   }
