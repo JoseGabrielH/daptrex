@@ -16,6 +16,7 @@
   const $ = (id) => document.getElementById(id);
   const raiz = document.documentElement;
   const cabecera = document.querySelector(".top");
+  const pie = $("pie");
   const grid = $("grid");
   const filters = $("filters");
   const detail = $("detail");
@@ -190,7 +191,7 @@
   function desvanecerResto(card, desde, hasta) {
     const opciones = { duration: ZOOM_MS * 0.6, easing: "ease", fill: "both" };
     const elementos = [...grid.children].filter((c) => c !== card);
-    elementos.push(card.querySelector(".card__type"), cabecera);
+    elementos.push(card.querySelector(".card__type"), cabecera, pie);
     return elementos.map((e) => e.animate([{ opacity: desde }, { opacity: hasta }], opciones));
   }
 
@@ -397,7 +398,7 @@
     ocupado = true;
     raiz.classList.remove("en-carrito");
     const opciones = { duration: REGRESO_MS, easing: "cubic-bezier(.6, 0, .2, 1)", fill: "both" };
-    const anteriores = abierto ? [detail] : [cabecera, grid];
+    const anteriores = abierto ? [detail] : [cabecera, grid, pie];
     const movimientos = [
       cart.animate([{ transform: "translateX(0)" }, { transform: "translateX(100vw)" }], opciones),
       ...anteriores.map((e) =>

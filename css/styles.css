@@ -45,9 +45,57 @@ body::before {
   background-size: auto, 720px auto;
 }
 
+/* Nombre de la marca pintado en la pared */
+.marca {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 100lvh;
+  z-index: -1;
+  display: grid;
+  place-items: center;
+  overflow: hidden;
+  pointer-events: none;
+}
+.marca span {
+  font-family: "Sedgwick Ave Display", "Brush Script MT", cursive;
+  font-size: min(27vw, 62vh);
+  line-height: 1;
+  color: rgba(168, 85, 247, .34);
+  text-shadow: 0 0 40px rgba(168, 85, 247, .25), 4px 5px 0 rgba(0, 0, 0, .4);
+  transform: rotate(-6deg);
+  white-space: nowrap;
+}
+
+/* Adornos blancos en los bordes de la pantalla */
+.borde {
+  --alto-adorno: 99px;
+  position: fixed;
+  top: 0;
+  z-index: -1;
+  width: var(--alto-adorno);
+  height: 100lvh;
+  overflow: hidden;
+  pointer-events: none;
+}
+.borde--izq { left: -42px; }
+.borde--der { right: -42px; transform: scaleX(-1); }
+.borde::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100lvh;
+  height: var(--alto-adorno);
+  background: url("https://static.wixstatic.com/media/8594ca_ca74f71203904aa3893a310eed3e5490~mv2.png") 0 0 / 323px var(--alto-adorno) repeat-x;
+  transform-origin: 0 0;
+  transform: rotate(-90deg) translateX(-100%);
+}
+
 html.bloqueado { overflow: hidden; }
-html.en-detalle .top, html.en-detalle .grid { visibility: hidden; }
-html.en-carrito .top, html.en-carrito .grid, html.en-carrito .detail { visibility: hidden; }
+html.en-detalle .top, html.en-detalle .grid, html.en-detalle .pie { visibility: hidden; }
+html.en-carrito .top, html.en-carrito .grid, html.en-carrito .detail, html.en-carrito .pie { visibility: hidden; }
 
 img { display: block; max-width: 100%; }
 button { -webkit-tap-highlight-color: transparent; }
@@ -145,6 +193,25 @@ button { -webkit-tap-highlight-color: transparent; }
   outline: 2px solid var(--purple);
   outline-offset: 3px;
 }
+
+/* Redes sociales */
+.pie {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 8px 32px;
+  padding: 0 56px 32px;
+}
+.pie a {
+  color: var(--dim);
+  font-size: 1.15rem;
+  letter-spacing: .08em;
+  text-decoration: none;
+  text-transform: uppercase;
+  transition: color .15s;
+}
+.pie a:hover { color: var(--white); }
+.pie a:focus-visible { outline: 2px solid var(--purple); outline-offset: 3px; }
 
 /* Vista de la prenda */
 .detail {
