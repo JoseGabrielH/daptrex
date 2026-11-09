@@ -62,8 +62,8 @@ body::before {
   font-family: "Sedgwick Ave Display", "Brush Script MT", cursive;
   font-size: min(27vw, 62vh);
   line-height: 1;
-  color: rgba(168, 85, 247, .34);
-  text-shadow: 0 0 40px rgba(168, 85, 247, .25), 4px 5px 0 rgba(0, 0, 0, .4);
+  color: rgba(255, 255, 255, .3);
+  text-shadow: 4px 5px 0 rgba(0, 0, 0, .35);
   transform: rotate(-6deg);
   white-space: nowrap;
 }
