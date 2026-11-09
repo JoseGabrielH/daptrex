@@ -9,6 +9,7 @@
   const ZOOM_MS = 620;
   const SALIDA_MS = 240;
   const ENTRADA_MS = 380;
+  const FOTO_MS = 200;
   const CURVA = "cubic-bezier(.7, 0, .2, 1)";
 
   const $ = (id) => document.getElementById(id);
@@ -26,6 +27,7 @@
 
   let tipoActual = null;
   let ocupado = false;
+  let turnoFoto = 0;
   let abierto = null; // { producto, foto, card, scroll, transform }
 
   /* ---------- Catálogo ---------- */
@@ -100,20 +102,40 @@
 
   /* ---------- Vista de la prenda ---------- */
 
-  function verFoto(indice, animar) {
+  function verFoto(indice, sentido = 0) {
     const { producto } = abierto;
     const total = producto.fotos.length;
-    abierto.foto = (indice + total) % total;
-    detailImg.src = RUTA + producto.fotos[abierto.foto];
+    const nueva = (indice + total) % total;
+    if (sentido && nueva === abierto.foto) return;
+    abierto.foto = nueva;
+    const src = RUTA + producto.fotos[nueva];
     dots.querySelectorAll("button").forEach((b, i) => {
-      b.setAttribute("aria-current", String(i === abierto.foto));
+      b.setAttribute("aria-current", String(i === nueva));
     });
-    if (animar) {
-      detailImg.animate(
-        [{ opacity: 0.15 }, { opacity: 1 }, { opacity: 0.5 }, { opacity: 1 }],
-        { duration: 240, easing: "steps(4, end)" }
-      );
-    }
+    if (sentido) deslizarFoto(src, sentido);
+    else detailImg.src = src;
+  }
+
+  // La foto actual sale hacia un lado y la siguiente entra por el otro.
+  async function deslizarFoto(src, sentido) {
+    const turno = ++turnoFoto;
+    detailImg.getAnimations().forEach((a) => a.cancel());
+    const salida = detailImg.animate(
+      [{ transform: "translateX(0)", opacity: 1 }, { transform: `translateX(${-sentido * 70}%)`, opacity: 0 }],
+      { duration: FOTO_MS, easing: "cubic-bezier(.5, 0, .9, .5)", fill: "forwards" }
+    );
+    await Promise.race([salida.finished.catch(() => {}), esperar(FOTO_MS + 100)]);
+    if (turno !== turnoFoto) return;
+    const siguiente = new Image();
+    siguiente.src = src;
+    await Promise.race([siguiente.decode().catch(() => {}), esperar(200)]);
+    if (turno !== turnoFoto) return;
+    detailImg.src = src;
+    salida.cancel();
+    detailImg.animate(
+      [{ transform: `translateX(${sentido * 70}%)`, opacity: 0 }, { transform: "translateX(0)", opacity: 1 }],
+      { duration: FOTO_MS + 80, easing: "cubic-bezier(.15, .7, .25, 1)" }
+    );
   }
 
   function prepararDetalle(p) {
@@ -122,7 +144,7 @@
       b.type = "button";
       b.setAttribute("aria-label", `Foto ${i + 1}`);
       b.append(document.createElement("span"));
-      b.addEventListener("click", () => verFoto(i, true));
+      b.addEventListener("click", () => verFoto(i, i > abierto.foto ? 1 : -1));
       return b;
     }));
     const varias = p.fotos.length > 1;
@@ -131,7 +153,7 @@
     $("detail-next").style.visibility = varias ? "" : "hidden";
     detailImg.alt = `${p.tipo} ${p.nombre}`;
     $("detail-type").textContent = p.tipo;
-    verFoto(0, false);
+    verFoto(0);
   }
 
   // Calcula el movimiento que lleva la foto tocada hasta donde estará la foto grande.
@@ -215,16 +237,16 @@
   }
 
   $("detail-close").addEventListener("click", () => { if (!ocupado) history.back(); });
-  $("detail-prev").addEventListener("click", () => verFoto(abierto.foto - 1, true));
-  $("detail-next").addEventListener("click", () => verFoto(abierto.foto + 1, true));
+  $("detail-prev").addEventListener("click", () => verFoto(abierto.foto - 1, -1));
+  $("detail-next").addEventListener("click", () => verFoto(abierto.foto + 1, 1));
   window.addEventListener("popstate", cerrar);
 
   document.addEventListener("keydown", (e) => {
     if (!abierto || ocupado) return;
     if (e.key === "Escape") history.back();
     if (abierto.producto.fotos.length < 2) return;
-    if (e.key === "ArrowLeft") verFoto(abierto.foto - 1, true);
-    if (e.key === "ArrowRight") verFoto(abierto.foto + 1, true);
+    if (e.key === "ArrowLeft") verFoto(abierto.foto - 1, -1);
+    if (e.key === "ArrowRight") verFoto(abierto.foto + 1, 1);
   });
 
   // Deslizar con el dedo para cambiar de foto
@@ -234,7 +256,7 @@
     if (inicioX === null || !abierto || abierto.producto.fotos.length < 2) return;
     const d = e.changedTouches[0].clientX - inicioX;
     inicioX = null;
-    if (Math.abs(d) > 40) verFoto(abierto.foto + (d < 0 ? 1 : -1), true);
+    if (Math.abs(d) > 40) verFoto(abierto.foto + (d < 0 ? 1 : -1), d < 0 ? 1 : -1);
   }, { passive: true });
 
   crearFiltros();

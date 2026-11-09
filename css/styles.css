@@ -24,6 +24,9 @@ body {
   color: var(--white);
   font-family: var(--font);
   background-color: var(--bg);
+  display: flex;
+  flex-direction: column;
+  min-height: 100dvh;
 }
 
 /* El ladrillo queda quieto detrás de todo, así no salta ni cambia de luz */
@@ -82,7 +85,19 @@ button { -webkit-tap-highlight-color: transparent; }
 }
 
 /* Catálogo: la última fila queda centrada */
-.page { position: relative; max-width: 1800px; margin: 0 auto; padding: 0 16px 64px; overflow-x: clip; }
+/* Si hay pocas prendas, quedan en el medio de la pantalla */
+.page {
+  position: relative;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  width: 100%;
+  max-width: 1800px;
+  margin: 0 auto;
+  padding: 0 16px 64px;
+  overflow-x: clip;
+}
 .grid {
   --cols: 2;
   --gx: 14px;
