@@ -45,29 +45,6 @@ body::before {
   background-size: auto, 720px auto;
 }
 
-/* Nombre de la marca pintado en la pared */
-.marca {
-  position: fixed;
-  top: 0;
-  left: 0;
-  right: 0;
-  height: 100lvh;
-  z-index: -1;
-  display: grid;
-  place-items: center;
-  overflow: hidden;
-  pointer-events: none;
-}
-.marca span {
-  font-family: "Sedgwick Ave Display", "Brush Script MT", cursive;
-  font-size: min(27vw, 62vh);
-  line-height: 1;
-  color: rgba(255, 255, 255, .3);
-  text-shadow: 4px 5px 0 rgba(0, 0, 0, .35);
-  transform: rotate(-6deg);
-  white-space: nowrap;
-}
-
 /* Adornos blancos en los bordes de la pantalla */
 .borde {
   --alto-adorno: 99px;
