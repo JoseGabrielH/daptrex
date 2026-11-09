@@ -42,7 +42,7 @@ body::before {
 }
 
 html.bloqueado { overflow: hidden; }
-html.en-detalle .top, html.en-detalle .page { visibility: hidden; }
+html.en-detalle .top, html.en-detalle .grid { visibility: hidden; }
 
 img { display: block; max-width: 100%; }
 button { -webkit-tap-highlight-color: transparent; }
@@ -114,9 +114,9 @@ button { -webkit-tap-highlight-color: transparent; }
 .card img { width: 100%; aspect-ratio: 1; object-fit: cover; transition: transform .25s ease; }
 .card img.is-cutout { object-fit: contain; }
 @media (hover: hover) {
-  .card:hover img { transform: translateY(-8px); }
+  .card:hover img { transform: scale(1.07); }
 }
-.card.levantada img { transform: translateY(-8px); }
+.card.levantada img { transform: scale(1.07); }
 .card__type {
   display: block;
   margin-top: 12px;
